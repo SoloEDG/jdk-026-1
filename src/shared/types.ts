@@ -38,6 +38,49 @@ export interface GameDocument {
   sessions: Record<string, Session>;
   records: SolveRecord[];
 }
+export type VerifyStatus =
+  | "running"
+  | "unique"
+  | "multiple"
+  | "unsolvable"
+  | "timeout";
+export interface VerifyView {
+  status: VerifyStatus;
+  contentKey: string;
+  elapsedMs: number;
+  budgetUsed: number;
+  solutions: number[][];
+  diff: number[];
+}
+export interface Draft {
+  id: string;
+  title: string;
+  size: number;
+  cells: number[];
+  updatedAt: number;
+}
+export interface PuzzleVersion {
+  id: string;
+  puzzleId: string;
+  version: number;
+  title: string;
+  collection: string;
+  level: Puzzle["level"];
+  size: number;
+  solution: number[];
+  color: string;
+  publishedAt: number;
+}
+export interface PublishedPuzzle {
+  puzzleId: string;
+  title: string;
+  collection: string;
+  level: Puzzle["level"];
+  color: string;
+  currentVersion: number;
+  draftId: string;
+  versions: PuzzleVersion[];
+}
 export type GameAction =
   | { type: "open"; id: string }
   | { type: "mark"; index: number; mark: Mark }

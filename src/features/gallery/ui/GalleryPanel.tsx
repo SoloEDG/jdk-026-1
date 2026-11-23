@@ -18,7 +18,7 @@ export function GalleryPanel({
       <span className="eyebrow">LITTLE THINGS, COLLECTED</span>
       <h1>把发现，收藏起来。</h1>
       <p className="muted">
-        解开图案，遇见它真正的模样。你的每一份专注都在这里。
+        解开图案，遇见它真正的模样。工坊作品在解出前不会公开原图。
       </p>
       <div className="gallery-grid">
         {puzzles.map((p) => {

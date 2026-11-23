@@ -1,13 +1,14 @@
 import { useEffect, useReducer, useState, useRef } from "react";
-import { findPuzzle, puzzles } from "../features/catalog";
+import { findPuzzle, puzzles as builtins } from "../features/catalog";
 import { inspect, nextHint } from "../features/assist";
 import { loadDocument, saveDocument } from "../features/journal";
 import { transition } from "./reducer";
-export function useGame() {
-  const [initial] = useState(() => loadDocument(puzzles));
+import type { Puzzle } from "../shared/types";
+export function useGame(allPuzzles: Puzzle[] = builtins) {
+  const [initial] = useState(() => loadDocument(allPuzzles));
   const [document, dispatch] = useReducer(
     (d: typeof initial.document, a: Parameters<typeof transition>[1]) =>
-      transition(d, a, puzzles),
+      transition(d, a, allPuzzles),
     initial.document,
   );
   const [message, setMessage] = useState(initial.warning);
@@ -15,8 +16,18 @@ export function useGame() {
     initial.warning ? "手动保存" : "进度已保存",
   );
   const allowSave = useRef(!initial.warning);
-  const puzzle = findPuzzle(document.activeId);
-  const session = document.sessions[puzzle.id];
+  const puzzle =
+    allPuzzles.find((p) => p.id === document.activeId) ?? findPuzzle(document.activeId);
+  const session = document.sessions[puzzle.id] ?? {
+    puzzleId: puzzle.id,
+    marks: Array(puzzle.size ** 2).fill("unknown"),
+    moves: [],
+    hints: 0,
+    checks: 0,
+    seconds: 0,
+    solved: false,
+    updatedAt: Date.now(),
+  };
   useEffect(() => {
     const timer = window.setInterval(() => {
       if (globalThis.document.visibilityState === "visible")

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Grid2X2,
   Images,
@@ -6,21 +6,42 @@ import {
   ArrowUpRight,
   CheckCircle2,
   X,
+  PenTool,
 } from "lucide-react";
-import { CatalogPanel, puzzles } from "../features/catalog";
+import { puzzles as builtins } from "../features/catalog";
+import { CatalogPanel } from "../features/catalog";
 import { BoardPanel } from "../features/board";
 import { AssistPanel } from "../features/assist";
 import { JournalPanel } from "../features/journal";
 import { GalleryPanel } from "../features/gallery";
+import {
+  WorkshopPanel,
+  allVersionPuzzles,
+  loadPublished,
+} from "../features/workshop";
 import { useGame } from "./useGame";
+
+type Page = "play" | "gallery" | "workshop";
+
 export function App() {
-  const game = useGame();
-  const [page, setPage] = useState<"play" | "gallery">("play");
+  // 工坊已发布作品（含历史版本）在应用层持有，题库/进度/展柜共用
+  const [published, setPublished] = useState(() => loadPublished());
+  const allPuzzles = useMemo(
+    () => [...builtins, ...allVersionPuzzles(published)],
+    [published],
+  );
+  const game = useGame(allPuzzles);
+  const [page, setPage] = useState<Page>("play");
   const [resetting, setResetting] = useState(false);
   const open = (id: string) => {
     game.dispatch({ type: "open", id });
     game.clearMessage();
     setPage("play");
+  };
+  const intro: Record<Page, { h2: string }> = {
+    play: { h2: "在数字之间，发现图案。" },
+    gallery: { h2: "让每一次发现，都有归处。" },
+    workshop: { h2: "亲手画一幅，让朋友从数字猜出来。" },
   };
   return (
     <div className="app-shell">
@@ -35,6 +56,14 @@ export function App() {
         >
           <Grid2X2 size={21} />
           <span>解谜</span>
+        </button>
+        <button
+          className={page === "workshop" ? "active" : ""}
+          onClick={() => setPage("workshop")}
+          aria-label="出题工坊"
+        >
+          <PenTool size={21} />
+          <span>工坊</span>
         </button>
         <button
           className={page === "gallery" ? "active" : ""}
@@ -64,21 +93,21 @@ export function App() {
           <div className="page-intro">
             <div>
               <span className="eyebrow">NONOGRAM CLUB / 数织俱乐部</span>
-              <h2>
-                {page === "play"
-                  ? "在数字之间，发现图案。"
-                  : "让每一次发现，都有归处。"}
-              </h2>
+              <h2>{intro[page].h2}</h2>
             </div>
             <div className="intro-note">
               不赶时间，只享受解开的瞬间。
               <ArrowUpRight size={16} />
             </div>
           </div>
-          {page === "play" ? (
+          {page === "play" && (
             <>
               <div className="workspace">
-                <CatalogPanel document={game.document} onOpen={open} />
+                <CatalogPanel
+                  document={game.document}
+                  puzzles={allPuzzles}
+                  onOpen={open}
+                />
                 <BoardPanel
                   puzzle={game.puzzle}
                   session={game.session}
@@ -99,7 +128,7 @@ export function App() {
               <div className="bottom-row">
                 <JournalPanel
                   document={game.document}
-                  puzzles={puzzles}
+                  puzzles={allPuzzles}
                   saveState={game.saveState}
                   onSave={game.save}
                   onOpen={open}
@@ -133,10 +162,15 @@ export function App() {
                 </button>
               </div>
             </>
-          ) : (
+          )}
+          {/* 工坊保持挂载：切走再回来，画稿与编辑状态都不丢 */}
+          <div hidden={page !== "workshop"}>
+            <WorkshopPanel onPublishedChange={setPublished} />
+          </div>
+          {page === "gallery" && (
             <GalleryPanel
               document={game.document}
-              puzzles={puzzles}
+              puzzles={allPuzzles}
               onOpen={open}
             />
           )}
@@ -165,7 +199,7 @@ export function App() {
             <p>
               本题标记、计时和提示额度会重置。已完成的解题记录和收藏仍保留。
             </p>
-            <div>
+            <div className="modal-actions">
               <button onClick={() => setResetting(false)}>继续解题</button>
               <button
                 className="primary"

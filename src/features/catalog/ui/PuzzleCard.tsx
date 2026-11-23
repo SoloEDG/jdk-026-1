@@ -1,33 +1,37 @@
-import { Grid2X2, Check } from "lucide-react";
+import { Grid2X2, Check, PenLine } from "lucide-react";
 import type { Puzzle, Session } from "../../../shared/types";
 import { completion } from "../../../shared/document";
 import { difficultyDots } from "../lib/filter";
+import { WORKSHOP_COLLECTION } from "../../workshop/lib/draft";
 export function PuzzleCard({
   puzzle,
+  index,
   session,
   selected,
   onOpen,
 }: {
   puzzle: Puzzle;
+  index: number;
   session?: Session;
   selected: boolean;
   onOpen: () => void;
 }) {
   const progress = session ? completion(session) : 0;
+  const workshop = puzzle.collection === WORKSHOP_COLLECTION;
+  const displayName =
+    session?.solved || !workshop
+      ? puzzle.title
+      : `工坊谜题 ${String(index + 1).padStart(2, "0")}`;
   return (
     <button
       className={`puzzle-card ${selected ? "selected" : ""}`}
       onClick={onOpen}
     >
       <span className="puzzle-icon" style={{ color: puzzle.color }}>
-        {session?.solved ? <Check size={22} /> : <Grid2X2 size={22} />}
+        {session?.solved ? <Check size={22} /> : workshop ? <PenLine size={20} /> : <Grid2X2 size={22} />}
       </span>
       <span className="puzzle-info">
-        <strong>
-          {session?.solved
-            ? puzzle.title
-            : `图案 ${puzzle.id === "bloom" ? "01" : puzzle.id === "heart" ? "02" : puzzle.id === "cup" ? "03" : puzzle.id === "cat" ? "04" : puzzle.id === "fern" ? "05" : "06"}`}
-        </strong>
+        <strong>{displayName}</strong>
         <small>
           {puzzle.size} × {puzzle.size}
           <i /> {puzzle.collection}

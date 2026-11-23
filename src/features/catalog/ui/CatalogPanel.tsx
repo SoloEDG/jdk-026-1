@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { Search, SlidersHorizontal, ArrowUpRight } from "lucide-react";
-import type { GameDocument } from "../../../shared/types";
-import { puzzles } from "../model/puzzles";
+import type { GameDocument, Puzzle } from "../../../shared/types";
 import { filterPuzzles } from "../lib/filter";
 import { PuzzleCard } from "./PuzzleCard";
 export function CatalogPanel({
   document,
+  puzzles,
   onOpen,
 }: {
   document: GameDocument;
+  puzzles: Puzzle[];
   onOpen: (id: string) => void;
 }) {
   const [query, setQuery] = useState("");
@@ -43,13 +44,14 @@ export function CatalogPanel({
         ))}
       </div>
       <div className="library-count">
-        精选题库 <span>{visible.length.toString().padStart(2, "0")}</span>
+        题库（含工坊作品） <span>{visible.length.toString().padStart(2, "0")}</span>
       </div>
       <div className="puzzle-list">
         {visible.map((p) => (
           <PuzzleCard
             key={p.id}
             puzzle={p}
+            index={puzzles.indexOf(p)}
             session={document.sessions[p.id]}
             selected={document.activeId === p.id}
             onOpen={() => onOpen(p.id)}
